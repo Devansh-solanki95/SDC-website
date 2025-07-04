@@ -84,7 +84,20 @@ System.err.println("next step");
 
 	        return ResponseEntity.ok(new ApiResponse(true, "Login successful", responseData));
 	    }
+	@PostMapping("/saveAdmin")
+	public ResponseEntity<ApiResponse> saveAdmin(@RequestBody AdminModel model)
+	{
+		Boolean status = adminService.saveAdmin(model);
 
+		if(status==true)
+		{
+			return ResponseEntity.ok(new ApiResponse(status, "Admin saved sucessfully", model));
+		}
+
+
+		return ResponseEntity.ok(new ApiResponse(status, "Admin Not Saved", model));
+
+	}
 	    
 	  
 	}
