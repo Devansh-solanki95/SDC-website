@@ -82,7 +82,7 @@ System.err.println("next step");
 	            responseData.put("email", admin.getEmail());
 	        }
 
-	        return ResponseEntity.ok(new ApiResponse(true, "Login successful", responseData));
+	        return ResponseEntity.ok(new ApiResponse(true, "Login successfull", responseData));
 	    }
 	@PostMapping("/saveAdmin")
 
@@ -95,12 +95,9 @@ System.err.println("next step");
 			return ResponseEntity.ok(new ApiResponse(status, "Admin saved sucessfully", model));
 		}
 
-
 		return ResponseEntity.ok(new ApiResponse(status, "Admin Not Saved", model));
 
 	}
-	    
-	  
 	}
 
 

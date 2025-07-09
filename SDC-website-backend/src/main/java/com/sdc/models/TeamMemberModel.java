@@ -16,16 +16,16 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TeamMemberModel {
-
-    private String name;
+	
+	private String name;
     private String branch;
     private String position;
     private String linkdin_url;
     private String github_url;
     private String insta_url;
     private MultipartFile image;  //  Added for image upload
-
+    
     private List<Integer> projectIds;
-    //  private List<ProjectModel> projects;
-
+  //  private List<ProjectModel> projects;
+    
 }

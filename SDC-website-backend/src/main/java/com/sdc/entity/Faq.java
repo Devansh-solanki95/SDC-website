@@ -30,7 +30,7 @@ public class Faq {
 	private String ans;
 
 	public Faq(String ques, String ans) {
-		super();
+		//super();
 		this.ques = ques;
 		this.ans = ans;
 	}
