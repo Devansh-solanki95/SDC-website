@@ -1,9 +1,12 @@
 package com.sdc.controller;
 
 import com.sdc.entity.Faq;
-import com.sdc.repo.FaqRepository;
+import com.sdc.models.FaqModel;
+import com.sdc.services.FaqService;
 import com.sdc.utils.ApiResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,65 +14,105 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-//@RequestMapping("/api/faq")
+@RequestMapping("/api/faq")
+@CrossOrigin(origins = "*")
 public class FaqController {
 
     @Autowired
-    private FaqRepository faqRepository;
+    private FaqService faqService;
 
-    // 🔹 Get all FAQs
-    @GetMapping("/api/faq/getallfaqs")
+
+    // 🔹 Get all FAQs via service
+    @GetMapping("/getallfaqs")
     public ResponseEntity<ApiResponse> getAllFaqs() {
-        List<Faq> list = faqRepository.findAll();
+        List<Faq> list = faqService.getAllFaqs();  // ✅ via service
         return ResponseEntity.ok(new ApiResponse(true, "All FAQs fetched successfully", list));
     }
 
-    // 🔹 Get FAQ by ID
-    @GetMapping("/api/faq/getfaqbyid/{id}")
+    // 🔹 Get FAQ by ID via service
+    @GetMapping("/getfaqbyid/{id}")
     public ResponseEntity<ApiResponse> getFaqById(@PathVariable Integer id) {
-
-        Optional<Faq> optional = faqRepository.findById(id);
+        Optional<Faq> optional = faqService.getFaqById(id);  // ✅ via service
         if (optional.isPresent()) {
             return ResponseEntity.ok(new ApiResponse(true, "FAQ found", optional.get()));
         } else {
-            return ResponseEntity.status(404).body(new ApiResponse(false ,"FAQ not found",null));
+            return ResponseEntity.status(404).body(new ApiResponse(false, "FAQ not found", null));
         }
     }
 
-    // 🔹 Create FAQ
 
-    @PostMapping("/api/faq/addfaq")
-    public ResponseEntity<ApiResponse> createFaq(@RequestBody Faq faq) {
-        Faq saved = faqRepository.save(faq);
-        return ResponseEntity.ok(new ApiResponse(true, "FAQ created successfully", saved));
+    @PostMapping("/addfaq")
+    public ResponseEntity<ApiResponse> createFaq(@RequestBody FaqModel faqModel) {
+        try {
+            if (faqModel.getQues() == null || faqModel.getAns() == null ||
+                    faqModel.getQues().isEmpty() || faqModel.getAns().isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                        new ApiResponse(false, "Question and Answer cannot be empty", null));
+            }
+
+            Faq saved = faqService.addFaq(faqModel);
+            return ResponseEntity.ok(new ApiResponse(true, "FAQ created successfully", saved));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new ApiResponse(false, "Something went wrong while creating FAQ", null));
+        }
     }
 
-    // 🔹 Update FAQ
-    @PutMapping("/api/faq/updatefaq/{id}")
-    public ResponseEntity<ApiResponse> updateFaq(@PathVariable Integer id, @RequestBody Faq updatedFaq) {
 
-        Optional<Faq> optional = faqRepository.findById(id);
+//    @GetMapping("/allfaq")
+//    public ResponseEntity<ApiResponse> getAllFaqs() {
+//        List<Faq> list = faqService.getAllFaqs();
+//        if (list.isEmpty()) {
+//            return ResponseEntity.ok(new ApiResponse(false, "No FAQs found", list));
+//        } else {
+//            return ResponseEntity.ok(new ApiResponse(true, "FAQs fetched successfully", list));
+//        }
+//    }
+
+
+
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse> deleteFaq(@PathVariable Integer id) {
+        try {
+            Optional<Faq> optional = faqService.getFaqById(id);
+
+            if (optional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse(false, "FAQ not found", null));
+            }
+
+            faqService.deleteFaq(id);
+            return ResponseEntity.ok(new ApiResponse(true, "FAQ deleted successfully", null));
+        } catch (Exception e) {
+            e.printStackTrace(); // helpful for debug
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Something went wrong while deleting", null));
+        }
+    }
+
+
+    @PutMapping("/updatefaq/{id}")
+    public ResponseEntity<ApiResponse> updateFaq(@PathVariable Integer id, @RequestBody Faq updatedFaq) {
+        Optional<Faq> optional = faqService.getFaqById(id); // ✅ Service use
+
         if (optional.isPresent()) {
             Faq existing = optional.get();
-            existing.setQues(updatedFaq.getQues());
-            existing.setAns(updatedFaq.getAns());
-            // Update other fields if any
-            faqRepository.save(existing);
-            return ResponseEntity.ok(new ApiResponse(true, "FAQ updated successfully", existing));
+
+            // ✅ If ques is not null or empty, then update
+            if (updatedFaq.getQues() != null && !updatedFaq.getQues().trim().isEmpty()) {
+                existing.setQues(updatedFaq.getQues());
+            }
+
+            // ✅ If ans is not null or empty, then update
+            if (updatedFaq.getAns() != null && !updatedFaq.getAns().trim().isEmpty()) {
+                existing.setAns(updatedFaq.getAns());
+            }
+
+            Faq saved = faqService.savefaq(existing); // ✅ Save via service
+            return ResponseEntity.ok(new ApiResponse(true, "FAQ updated successfully", saved));
         } else {
-            return ResponseEntity.status(404).body(new ApiResponse(false, "FAQ not found",null));
+            return ResponseEntity.status(404).body(new ApiResponse(false, "FAQ not found", null));
         }
     }
-
-    // 🔹 Delete FAQ
-                @DeleteMapping("/api/faq/deletefaq/{id}")
-                public ResponseEntity<ApiResponse> deleteFaq (@PathVariable Integer id){
-
-                    if (faqRepository.existsById(id)) {
-                        faqRepository.deleteById(id);
-                        return ResponseEntity.ok(new ApiResponse(true, "FAQ deleted successfully", null));
-                    } else {
-                        return ResponseEntity.status(404).body(new ApiResponse(false, "FAQ not found", null));
-                    }
-                }
-            }
+}
