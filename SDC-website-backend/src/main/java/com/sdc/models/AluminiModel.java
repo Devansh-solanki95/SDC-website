@@ -9,12 +9,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TestimonialsModel {
+public class AluminiModel {
 	
-	private String clientName;
+	private String aluminiName;
+	private String lpa;
+	private String companyName;
+	private String content;
 	
-	private String des;
-	
-	private MultipartFile image;
+	private MultipartFile image;	
 
 }

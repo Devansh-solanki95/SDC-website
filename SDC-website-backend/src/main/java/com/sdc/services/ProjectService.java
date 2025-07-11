@@ -3,13 +3,11 @@ package com.sdc.services;
 import com.sdc.entity.Projects;
 import com.sdc.entity.TeamMember;
 import com.sdc.models.ProjectModel;
-import com.sdc.repo.ProjectRepository;
+import com.sdc.repo.ProjectRepo;
 import com.sdc.repo.TeamMemberRepository;
-
-import ch.qos.logback.core.model.Model;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,22 +17,17 @@ import java.util.Optional;
 public class ProjectService {
 
     @Autowired
-    private ProjectRepository projectRepo;
+    private ProjectRepo projectRepo;
 
     @Autowired
     private TeamMemberRepository teamMemberRepository;
 
-//    // Save project (create)
-//    public Projects saveProject(Projects project) {
-//        return projectRepo.save(project);
-//    }
-
-    // Get all projects
+    // Get all projects with members
     public List<Projects> getAllProjects() {
-        return projectRepo.findAll();
+        return projectRepo.findAllWithTeamMembers();
     }
 
-    // Get single project by ID
+    // Get single project
     public Projects getProjectById(Integer id) {
         return projectRepo.findById(id).orElse(null);
     }
@@ -49,7 +42,7 @@ public class ProjectService {
         }
     }
 
-    //  Assign team members to a project (for bidirectional mapping)
+    // Assign team members
     public boolean assignTeamMembers(Integer projectId, List<Integer> memberIds) {
         Optional<Projects> optionalProject = projectRepo.findById(projectId);
         if (optionalProject.isEmpty()) return false;
@@ -57,57 +50,93 @@ public class ProjectService {
         Projects project = optionalProject.get();
         List<TeamMember> members = teamMemberRepository.findAllById(memberIds);
 
-        // Set team members to the project
         project.setTeamMembers(members);
 
-        // Optional: maintain reverse mapping to avoid issues
         for (TeamMember member : members) {
             if (!member.getProjects().contains(project)) {
                 member.getProjects().add(project);
             }
         }
 
-        projectRepo.save(project);  // Persist both sides
+        projectRepo.save(project);
         return true;
     }
 
-public Projects saveProject(ProjectModel model) {
-    Projects project = new Projects();
-    project.setTitle(model.getTitle());
-    project.setDescription(model.getDescription());
-    project.setLink(model.getLink());
-    
-    System.err.println("project object created");
-  
-    try {
-        if (model.getImage() != null && !model.getImage().isEmpty()) {
-            project.setImage(model.getImage().getBytes());
-    
-        System.err.println("in the try block of image ");
+    // Save new project with image and team
+    public Projects saveProject(ProjectModel model) {
+        Projects project = new Projects();
+
+        project.setTitle(model.getTitle());
+        project.setDescription(model.getDescription());
+        project.setLink(model.getLink());
+
+        try {
+            if (model.getImage() != null && !model.getImage().isEmpty()) {
+                project.setImage(model.getImage().getBytes());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading image file", e);
         }
-        
-    } catch (IOException e) {
-    	System.out.println("in project service");
-        throw new RuntimeException("Error reading image file", e);
+
+        List<Integer> ids = model.getTeamMemberIds();
+        if (ids != null && !ids.isEmpty()) {
+            List<TeamMember> members = teamMemberRepository.findAllById(ids);
+            if (members.size() != ids.size()) {
+                System.err.println("Some team member IDs not found!");
+            }
+            project.setTeamMembers(members);
+        }
+
+        return projectRepo.save(project);
     }
 
-System.err.println("after the try block ");
-   List<Integer> ids = model.getTeamMemberIds();
-   if(ids != null && !ids.isEmpty())
-   {
-    List<TeamMember> members = teamMemberRepository.findAllById(model.getTeamMemberIds());
-    if(members.size() != ids.size() )
-    {
-    System.err.println(123445);
+    // Update project with only non-null fields
+    public Optional<Projects> updateProjectWithImage(Integer id, ProjectModel model) {
+        return projectRepo.findById(id).map(existing -> {
+
+            // Safe updates — only overwrite non-null and non-empty values
+            if (StringUtils.hasText(model.getTitle())) {
+                existing.setTitle(model.getTitle());
+            }
+
+            if (StringUtils.hasText(model.getDescription())) {
+                existing.setDescription(model.getDescription());
+            }
+
+            if (StringUtils.hasText(model.getLink())) {
+                existing.setLink(model.getLink());
+            }
+
+            try {
+                if (model.getImage() != null && !model.getImage().isEmpty()) {
+                    existing.setImage(model.getImage().getBytes());
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Error updating project image", e);
+            }
+
+            // Update team members only if given
+            List<Integer> ids = model.getTeamMemberIds();
+            if (ids != null && !ids.isEmpty()) {
+                List<TeamMember> members = teamMemberRepository.findAllById(ids);
+
+                if (members.size() != ids.size()) {
+                    System.err.println("Some team member IDs not found!");
+                }
+
+                existing.setTeamMembers(members);
+
+                for (TeamMember member : members) {
+                    if (!member.getProjects().contains(existing)) {
+                        member.getProjects().add(existing);
+                    }
+                }
+            }
+
+            // Save and return
+            projectRepo.save(existing);
+            return projectRepo.findByIdWithMembers(existing.getProjectID())
+                    .orElse(existing);
+        });
     }
-    
-    project.setTeamMembers(members);
-    System.out.println(members);
-   }
-   
- 
-    
-  
-    return projectRepo.save(project);
-}
 }

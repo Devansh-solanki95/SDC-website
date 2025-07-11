@@ -1,72 +1,74 @@
 package com.sdc.controller;
 
 import com.sdc.entity.Testimonials;
-import com.sdc.repo.TestimonialRepository;
+import com.sdc.models.TestimonialsModel;
+import com.sdc.services.TestimonialsService;
 import com.sdc.utils.ApiResponse;
-import jakarta.servlet.ServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.Base64;
 
 @RestController
-@RequestMapping("/api/testimonials")
+@RequestMapping("/admin/testimonials")
+@PreAuthorize("hasRole('ADMIN')") // Optional if secured
+@CrossOrigin(origins = "http://localhost:5173")
 public class TestimonialsController {
 
     @Autowired
-    private TestimonialRepository testimonialsRepository;
+    private TestimonialsService testimonialsService;
 
-    // 🔹 GET all testimonials
-    @GetMapping("/getall")
-    public ResponseEntity<ApiResponse> getAllTestimonials(ServletResponse response) {
-        List<Testimonials> list = testimonialsRepository.findAll();
-        return ResponseEntity.ok(new ApiResponse(true, "Fetched all testimonials", list));
+    // ✅ Add testimonial
+    @PostMapping(value = "/add", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse> addTestimonial(@ModelAttribute TestimonialsModel model) {
+        Testimonials saved = testimonialsService.addTestimonial(model);
+        return ResponseEntity.ok(new ApiResponse(true, "Testimonial added successfully", convertToResponse(saved)));
     }
 
-    // 🔹 GET testimonial by ID
-    @GetMapping("/getbyid/{id}")
-    public ResponseEntity<ApiResponse> getTestimonialById(@PathVariable Long id) {
-        Optional<Testimonials> optional = testimonialsRepository.findById(id);
-        if (optional.isPresent()) {
-            return ResponseEntity.ok(new ApiResponse(true, "Testimonial found", optional.get()));
+    // ✅ Update testimonial
+    @PutMapping(value = "/update/{id}", consumes = "multipart/form-data")
+    public ResponseEntity<ApiResponse> updateTestimonial(@PathVariable Integer id, @ModelAttribute TestimonialsModel model) {
+        return testimonialsService.updateTestimonial(id, model)
+                .map(updated -> ResponseEntity.ok(new ApiResponse(true, "Testimonial updated successfully", convertToResponse(updated))))
+                .orElseGet(() -> ResponseEntity.ok(new ApiResponse(false, "Testimonial not found", null)));
+    }
+
+//    //  Get all testimonials with base64 images
+//    @GetMapping("/getAll")
+//    public ResponseEntity<ApiResponse> getAllTestimonials() {
+//        List<Testimonials> list = testimonialsService.getAllTestimonials();
+//        List<Map<String, Object>> response = list.stream()
+//                .map(this::convertToResponse)
+//                .collect(Collectors.toList());
+//
+//        return ResponseEntity.ok(new ApiResponse(true, "Testimonials fetched successfully", response));
+//    }
+
+    // ❌ Delete testimonial
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<ApiResponse> deleteTestimonial(@PathVariable Integer id) {
+        boolean deleted = testimonialsService.deleteTestimonial(id);
+        return ResponseEntity.ok(new ApiResponse(deleted, deleted ? "Testimonial deleted successfully" : "Testimonial not found", null));
+    }
+
+    // ✅ Convert to JSON-friendly format with base64 image
+    private Map<String, Object> convertToResponse(Testimonials t) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("testId", t.getTestId());
+        map.put("clientName", t.getClientName());
+        map.put("des", t.getDes());
+
+        if (t.getImage() != null && t.getImage().length > 0) {
+            map.put("imageBase64", "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(t.getImage()));
         } else {
-            return ResponseEntity.status(404).body(new ApiResponse(false, "Testimonial not found",null));
+            map.put("imageBase64", null);
         }
-    }
 
-    // 🔹 CREATE a testimonial
-    @PostMapping("/addtestimonial")
-    public ResponseEntity<ApiResponse> createTestimonial(@RequestBody Testimonials testimonial) {
-        Testimonials saved = testimonialsRepository.save(testimonial);
-        return ResponseEntity.ok(new ApiResponse(true, "Testimonial created successfully", saved));
-    }
-
-    // 🔹 UPDATE a testimonial
-    @PutMapping("/updatetestimonial/{id}")
-    public ResponseEntity<ApiResponse> updateTestimonial(@PathVariable Long id, @RequestBody Testimonials updatedData) {
-        Optional<Testimonials> optional = testimonialsRepository.findById(id);
-        if (optional.isPresent()) {
-            Testimonials existing = optional.get();
-            existing.setClientName(updatedData.getClientName());
-            existing.setDes(updatedData.getDes());
-            // update other fields as needed
-            testimonialsRepository.save(existing);
-            return ResponseEntity.ok(new ApiResponse(true, "Testimonial updated", existing));
-        } else {
-            return ResponseEntity.status(404).body(new ApiResponse(false, "Testimonial not found",null));
-        }
-    }
-
-    // 🔹 DELETE a testimonial
-    @DeleteMapping("/deletetestimonial/{id}")
-    public ResponseEntity<ApiResponse> deleteTestimonial(@PathVariable Long id) {
-        if (testimonialsRepository.existsById(id)) {
-            testimonialsRepository.deleteById(id);
-            return ResponseEntity.ok(new ApiResponse(true, "Testimonial deleted successfully",null));
-        } else {
-            return ResponseEntity.status(404).body(new ApiResponse(false, "Testimonial not found",null));
-        }
+        return map;
     }
 }

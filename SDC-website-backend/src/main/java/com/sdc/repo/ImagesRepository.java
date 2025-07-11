@@ -1,10 +1,12 @@
 package com.sdc.repo;
 
-import com.sdc.entity.Testimonials;
+import com.sdc.entity.Images;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TestimonialRepository extends JpaRepository<Testimonials, Integer> {
+public interface ImagesRepository extends JpaRepository<Images, Integer> {
+
     
+    Images findByTitle(String title);
 }

@@ -17,13 +17,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import org.hibernate.annotations.Comment;
-import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 @Entity
 @Table(name = "projects")
@@ -32,6 +28,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 @NoArgsConstructor
 @Data
 @JsonInclude(JsonInclude.Include.ALWAYS)
+
 public class Projects {
 
 	@Id
@@ -59,8 +56,6 @@ public class Projects {
 			joinColumns = @JoinColumn(name = "projectID"),
 			inverseJoinColumns = @JoinColumn(name = "memberId")
 	)
-
-	@JsonInclude(JsonInclude.Include.ALWAYS)
 	@JsonIgnoreProperties("projects")   
 	private List<TeamMember> teamMembers = new ArrayList<>();
 }

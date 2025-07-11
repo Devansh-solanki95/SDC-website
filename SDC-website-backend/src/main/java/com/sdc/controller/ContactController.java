@@ -2,27 +2,44 @@ package com.sdc.controller;
 
 import com.sdc.entity.Contact;
 import com.sdc.repo.ContactRepository;
+import com.sdc.services.EmailService;
+import com.sdc.utils.ApiResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/auth/contactdetails")
+@RequestMapping("/public/contact")
 public class ContactController {
     @Autowired
     private ContactRepository contactRepository;
 
-    @GetMapping
-    public List<Contact> getAllContacts(){
+    @Autowired
+    private EmailService emailService;
 
-        return contactRepository.findAll();
+    @PostMapping("/save")
+    public ResponseEntity<ApiResponse> saveContact(@RequestBody Contact contact) {
+        contactRepository.save(contact);
+        emailService.sendContactEmail(
+                contact.getName(),
+                contact.getEmail(),
+                contact.getContactNo(),
+                contact.getQuery(),
+                contact.getMessage()
+        );
+        return ResponseEntity.ok(new ApiResponse(true, "contact saved and email send", contact));
     }
 
+//    
+//    @PostMapping("/save")
+//    public Contact createEmployee(@RequestBody Contact contact){
+//        return contactRepository.save(contact);
+//    }
+//    
     
-    @PostMapping
-    public Contact createEmployee(@RequestBody Contact contact){
-
-        return contactRepository.save(contact);
-    }
+    
+    
 }

@@ -1,10 +1,11 @@
 package com.sdc.repo;
 
-import com.sdc.entity.Testimonials;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.sdc.entity.Alumini;
+
 @Repository
-public interface TestimonialRepository extends JpaRepository<Testimonials, Integer> {
-    
+public interface AluminiRepository extends JpaRepository<Alumini, Integer> {
+
 }

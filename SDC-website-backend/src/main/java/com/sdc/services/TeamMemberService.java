@@ -3,11 +3,11 @@ package com.sdc.services;
 import com.sdc.entity.Projects;
 import com.sdc.entity.TeamMember;
 import com.sdc.models.TeamMemberModel;
-import com.sdc.repo.ProjectRepository;
-
+import com.sdc.repo.ProjectRepo;
 import com.sdc.repo.TeamMemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -20,13 +20,13 @@ public class TeamMemberService {
     @Autowired
     private TeamMemberRepository teamMemberRepository;
 
-   @Autowired
-    private ProjectRepository projectRepository;
+    @Autowired
+    private ProjectRepo projectRepo;
 
-
-    // Add Team Member (with image)
+    // Add Team Member with image
     public TeamMember addTeamMemberWithImage(TeamMemberModel model) {
         TeamMember member = mapToEntity(model);
+
         try {
             if (model.getImage() != null && !model.getImage().isEmpty()) {
                 member.setImage(model.getImage().getBytes());
@@ -36,36 +36,49 @@ public class TeamMemberService {
         }
 
         List<Integer> ids = model.getProjectIds();
-        if(ids != null && !ids.isEmpty())
-        {
-        	List<Projects> projects = projectRepository.findAllById(ids);
+        if (ids != null && !ids.isEmpty()) {
+            List<Projects> projects = projectRepo.findAllById(ids);
+            if (projects.size() != ids.size()) {
+                System.err.println("Some project IDs not found!");
+            }
+            member.setProjects(projects);
 
-        	 if(projects.size() != ids.size() )
-        	    {
-        	    System.err.println(123445);
-        	    }
-        	 member.setProjects(projects);
-        	 for (Projects project : projects) {
-        	        project.getTeamMembers().add(member);  //creates join table record
-        	    }
-        	}
-
+            for (Projects project : projects) {
+                project.getTeamMembers().add(member);
+            }
+        }
 
         System.out.println("TeamMember Created: " + member.getName());
-
-
         return teamMemberRepository.save(member);
     }
 
-    // Update Team Member (with optional image)
+    // Update only non-null fields
     public Optional<TeamMember> updateTeamMemberWithImage(Integer id, TeamMemberModel model) {
         return teamMemberRepository.findById(id).map(existing -> {
-            existing.setName(model.getName());
-            existing.setBranch(model.getBranch());
-            existing.setPosition(model.getPosition());
-            existing.setLinkdin_url(model.getLinkdin_url());
-            existing.setGithub_url(model.getGithub_url());
-            existing.setInsta_url(model.getInsta_url());
+
+            if (StringUtils.hasText(model.getName())) {
+                existing.setName(model.getName());
+            }
+
+            if (StringUtils.hasText(model.getBranch())) {
+                existing.setBranch(model.getBranch());
+            }
+
+            if (StringUtils.hasText(model.getPosition())) {
+                existing.setPosition(model.getPosition());
+            }
+
+            if (StringUtils.hasText(model.getLinkdin_url())) {
+                existing.setLinkdin_url(model.getLinkdin_url());
+            }
+
+            if (StringUtils.hasText(model.getGithub_url())) {
+                existing.setGithub_url(model.getGithub_url());
+            }
+
+            if (StringUtils.hasText(model.getInsta_url())) {
+                existing.setInsta_url(model.getInsta_url());
+            }
 
             try {
                 MultipartFile imageFile = model.getImage();
@@ -76,11 +89,28 @@ public class TeamMemberService {
                 throw new RuntimeException("Error updating image file", e);
             }
 
+            List<Integer> ids = model.getProjectIds();
+            if (ids != null && !ids.isEmpty()) {
+                List<Projects> projects = projectRepo.findAllById(ids);
+
+                if (projects.size() != ids.size()) {
+                    System.err.println("Some project IDs not found.");
+                }
+
+                existing.setProjects(projects);
+
+                for (Projects project : projects) {
+                    if (!project.getTeamMembers().contains(existing)) {
+                        project.getTeamMembers().add(existing);
+                    }
+                }
+            }
+
             return teamMemberRepository.save(existing);
         });
     }
 
-    //  Delete
+    // Delete
     public boolean deleteTeamMember(Integer id) {
         if (teamMemberRepository.existsById(id)) {
             teamMemberRepository.deleteById(id);
@@ -89,7 +119,7 @@ public class TeamMemberService {
         return false;
     }
 
-    //  Mapping helper
+    // Helper mapping (for add only)
     private TeamMember mapToEntity(TeamMemberModel model) {
         TeamMember member = new TeamMember();
         member.setName(model.getName());
@@ -100,8 +130,9 @@ public class TeamMemberService {
         member.setInsta_url(model.getInsta_url());
         return member;
     }
+
+    // Get All Members
     public List<TeamMember> getAll() {
         return teamMemberRepository.findAll();
     }
-
 }

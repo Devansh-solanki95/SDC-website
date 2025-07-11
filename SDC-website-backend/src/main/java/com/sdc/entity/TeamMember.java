@@ -62,7 +62,7 @@ public class TeamMember {
 	
 	@ManyToMany(mappedBy = "teamMembers")
 	@JsonInclude(JsonInclude.Include.ALWAYS)
-	@JsonIgnoreProperties("teamMembers") 
+	@JsonIgnoreProperties("projects") 
 	private List<Projects> projects = new ArrayList<>() ;
 	
 }

@@ -8,39 +8,22 @@ import com.sdc.utils.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/faq")
-@CrossOrigin(origins = "*")
+@RequestMapping("/faq")
+@CrossOrigin(origins = "http://localhost:5173")
+@PreAuthorize("hasRole('ADMIN')") 
 public class FaqController {
 
     @Autowired
     private FaqService faqService;
 
-
-    // 🔹 Get all FAQs via service
-    @GetMapping("/getallfaqs")
-    public ResponseEntity<ApiResponse> getAllFaqs() {
-        List<Faq> list = faqService.getAllFaqs();  // ✅ via service
-        return ResponseEntity.ok(new ApiResponse(true, "All FAQs fetched successfully", list));
-    }
-
-    // 🔹 Get FAQ by ID via service
-    @GetMapping("/getfaqbyid/{id}")
-    public ResponseEntity<ApiResponse> getFaqById(@PathVariable Integer id) {
-        Optional<Faq> optional = faqService.getFaqById(id);  // ✅ via service
-        if (optional.isPresent()) {
-            return ResponseEntity.ok(new ApiResponse(true, "FAQ found", optional.get()));
-        } else {
-            return ResponseEntity.status(404).body(new ApiResponse(false, "FAQ not found", null));
-        }
-    }
-
-
+    //to add faqs
     @PostMapping("/addfaq")
     public ResponseEntity<ApiResponse> createFaq(@RequestBody FaqModel faqModel) {
         try {
@@ -51,6 +34,7 @@ public class FaqController {
             }
 
             Faq saved = faqService.addFaq(faqModel);
+            System.err.println(saved);
             return ResponseEntity.ok(new ApiResponse(true, "FAQ created successfully", saved));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
@@ -58,19 +42,15 @@ public class FaqController {
         }
     }
 
-
-//    @GetMapping("/allfaq")
-//    public ResponseEntity<ApiResponse> getAllFaqs() {
-//        List<Faq> list = faqService.getAllFaqs();
-//        if (list.isEmpty()) {
-//            return ResponseEntity.ok(new ApiResponse(false, "No FAQs found", list));
-//        } else {
-//            return ResponseEntity.ok(new ApiResponse(true, "FAQs fetched successfully", list));
-//        }
-//    }
-
-
-
+    @GetMapping("/allfaq")
+    public ResponseEntity<ApiResponse> getAllFaqs() {
+        List<Faq> list = faqService.getAllFaqs();
+        if (list.isEmpty()) {
+            return ResponseEntity.ok(new ApiResponse(false, "No FAQs found", list));
+        } else {
+            return ResponseEntity.ok(new ApiResponse(true, "FAQs fetched successfully", list));
+        }
+    }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse> deleteFaq(@PathVariable Integer id) {
@@ -99,17 +79,17 @@ public class FaqController {
         if (optional.isPresent()) {
             Faq existing = optional.get();
 
-            // ✅ If ques is not null or empty, then update
+            //  If ques is not null or empty, then update
             if (updatedFaq.getQues() != null && !updatedFaq.getQues().trim().isEmpty()) {
                 existing.setQues(updatedFaq.getQues());
             }
 
-            // ✅ If ans is not null or empty, then update
+            //  If ans is not null or empty, then update
             if (updatedFaq.getAns() != null && !updatedFaq.getAns().trim().isEmpty()) {
                 existing.setAns(updatedFaq.getAns());
             }
 
-            Faq saved = faqService.savefaq(existing); // ✅ Save via service
+            Faq saved = faqService.savefaq(existing); //  Save via service
             return ResponseEntity.ok(new ApiResponse(true, "FAQ updated successfully", saved));
         } else {
             return ResponseEntity.status(404).body(new ApiResponse(false, "FAQ not found", null));

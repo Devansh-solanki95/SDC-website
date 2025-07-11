@@ -1,6 +1,8 @@
 package com.sdc.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +25,13 @@ public class AdminService {
 		String rawPassword = model.getPassword();
 		String hashedPass = passwordEncoder.encode(rawPassword);
 		
-		Admin newAdmin = new Admin(model.getName(), model.getEmail(), model.getContact_no(), hashedPass);
+		//Admin newAdmin = new Admin();
+		 Admin newAdmin = new Admin(model.getName(), model.getEmail(), model.getContact_no(), hashedPass);
+		/*
+		 * newAdmin.setContact_no(model.getContact_no());
+		 * newAdmin.setEmail(model.getEmail()); newAdmin.setName(model.getName());
+		 * newAdmin.setPassword(model.getPassword());
+		 */
 		
 		adminRepo.save(newAdmin);
 		
@@ -31,7 +39,4 @@ public class AdminService {
 		
 		return true;
 	}
-	
-	
-
 }

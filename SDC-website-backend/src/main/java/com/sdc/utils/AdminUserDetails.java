@@ -29,7 +29,6 @@ public class AdminUserDetails implements UserDetails {
     public String getUsername() {
         return admin.getEmail();
     }
-
     @Override
     public boolean isAccountNonExpired() {
         return true;

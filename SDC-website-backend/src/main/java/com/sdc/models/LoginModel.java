@@ -7,7 +7,6 @@ import lombok.Data;
 public class LoginModel {
 
 	private String email;
-	
 	private String pass;
 	
 }

@@ -1,22 +1,17 @@
 package com.sdc.entity;
 
 import jakarta.persistence.Column;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import lombok.Data;
+@Data
 @Entity
 @Table(name="faq")
-@Setter
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
+
 public class Faq {
 	
 	@Id
@@ -29,8 +24,7 @@ public class Faq {
 	@Column
 	private String ans;
 
-	public Faq(String ques, String ans) {
-		//super();
+	public Faq() {
 		this.ques = ques;
 		this.ans = ans;
 	}
