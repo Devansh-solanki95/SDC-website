@@ -16,11 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sdc.entity.Alumini;
 import com.sdc.entity.Faq;
+import com.sdc.entity.Images;
 import com.sdc.entity.Projects;
 import com.sdc.entity.TeamMember;
 import com.sdc.entity.Testimonials;
 import com.sdc.repo.AluminiRepository;
 import com.sdc.services.FaqService;
+import com.sdc.services.ImagesService;
 import com.sdc.services.ProjectService;
 import com.sdc.services.TeamMemberService;
 import com.sdc.services.TestimonialsService;
@@ -45,6 +47,9 @@ public class PublicController {
 	
 	@Autowired
 	private FaqService faqService;
+	
+	@Autowired
+	private ImagesService imagesService;
 	
 	
     @GetMapping("/allproject")
@@ -214,4 +219,25 @@ public class PublicController {
     //
     //
 
+    
+    @GetMapping("/images/getAll")
+    public ResponseEntity<ApiResponse> getAllImages() {
+        List<Images> images = imagesService.getAllImages();
+
+        List<Map<String, Object>> response = images.stream().map(img -> {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", img.getId());
+            map.put("title", img.getTitle());
+
+            if (img.getImage() != null && img.getImage().length > 0) {
+                map.put("imageBase64", "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(img.getImage()));
+            } else {
+                map.put("imageBase64", null);
+            }
+
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse(true, "All images fetched", response));
+    }
 }

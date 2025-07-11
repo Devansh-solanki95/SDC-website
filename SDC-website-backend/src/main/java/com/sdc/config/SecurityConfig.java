@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
+                .requestMatchers("/api/forms/**").permitAll()
                 .requestMatchers( "/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             .and()

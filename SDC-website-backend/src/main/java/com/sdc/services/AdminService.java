@@ -1,5 +1,7 @@
 package com.sdc.services;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 
@@ -8,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import com.sdc.entity.Admin;
 import com.sdc.models.AdminModel;
+import com.sdc.models.ForgetPasswordModel;
+import com.sdc.models.UpdateAdminModel;
 import com.sdc.repo.AdminRepository;
 
 @Service
@@ -38,5 +42,39 @@ public class AdminService {
 		System.out.println("admin saved successfully");
 		
 		return true;
+	}
+	
+	public Admin updatePasswordById(Long id, String newPassword) {
+	    Optional<Admin> optionalAdmin = adminRepo.findById(id);
+	    if (optionalAdmin.isPresent()) {
+	        Admin admin = optionalAdmin.get();
+	        admin.setPassword(passwordEncoder.encode(newPassword));
+	        return adminRepo.save(admin);
+	    }
+	    return null;
+	}
+
+	public Admin updateAdminProfile(Long adminId, UpdateAdminModel model) {
+	    Optional<Admin> optionalAdmin = adminRepo.findById(adminId);
+
+	    if (optionalAdmin.isPresent()) {
+	        Admin admin = optionalAdmin.get();
+
+	        if (model.getName() != null)
+	            admin.setName(model.getName());
+
+	        if (model.getEmail() != null)
+	            admin.setEmail(model.getEmail());
+
+	        if (model.getContact_no() != null)
+	            admin.setContact_no(model.getContact_no());
+
+//	        if (model.getPassword() != null && !model.getPassword().isEmpty())
+//	            admin.setPassword(passwordEncoder.encode(model.getPassword()));
+
+	        return adminRepo.save(admin);
+	    }
+
+	    return null;
 	}
 }

@@ -51,27 +51,24 @@ public class ImagesController {
         }
     }
 
-    @GetMapping("/getAll")
-    public ResponseEntity<ApiResponse> getAllImages() {
-        List<Images> images = imagesService.getAllImages();
-
-        List<Map<String, Object>> response = images.stream().map(img -> {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("id", img.getId());
-            map.put("title", img.getTitle());
-
-            if (img.getImage() != null && img.getImage().length > 0) {
-                map.put("imageBase64", "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(img.getImage()));
-            } else {
-                map.put("imageBase64", null);
-            }
-
-            return map;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(new ApiResponse(true, "All images fetched", response));
-    }
-
+	/*
+	 * @GetMapping("/getAll") public ResponseEntity<ApiResponse> getAllImages() {
+	 * List<Images> images = imagesService.getAllImages();
+	 * 
+	 * List<Map<String, Object>> response = images.stream().map(img -> { Map<String,
+	 * Object> map = new LinkedHashMap<>(); map.put("id", img.getId());
+	 * map.put("title", img.getTitle());
+	 * 
+	 * if (img.getImage() != null && img.getImage().length > 0) {
+	 * map.put("imageBase64", "data:image/jpeg;base64," +
+	 * Base64.getEncoder().encodeToString(img.getImage())); } else {
+	 * map.put("imageBase64", null); }
+	 * 
+	 * return map; }).collect(Collectors.toList());
+	 * 
+	 * return ResponseEntity.ok(new ApiResponse(true, "All images fetched",
+	 * response)); }
+	 */
     // ✅ Delete image
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse> deleteImage(@PathVariable Integer id) {

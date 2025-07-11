@@ -1,17 +1,26 @@
 package com.sdc.controller;
 
+import com.sdc.entity.Admin;
+
 import com.sdc.entity.Contact;
+import com.sdc.entity.Images;
 import com.sdc.entity.Projects;
 import com.sdc.entity.TeamMember;
-import com.sdc.models.AdminModel;
 import com.sdc.models.TeamMemberModel;
+import com.sdc.models.AdminModel;
+import com.sdc.models.ForgetPasswordModel;
 import com.sdc.repo.ContactRepository;
 import com.sdc.services.AdminService;
 import com.sdc.services.ProjectService;
 import com.sdc.services.TeamMemberService;
 import com.sdc.utils.ApiResponse;
 
+import jakarta.annotation.security.PermitAll;
+
+import com.sdc.models.UpdateAdminModel;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -117,10 +126,43 @@ public class AdminController {
 
     
     
-    //contact apis
+    //contact api
     @GetMapping("/getAllContacts")
     public List<Contact> getAllContacts(){
         return contactRepository.findAll();
     }
     
+    
+    @PutMapping("/updateAdmin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> updateAdminProfile(@PathVariable Long id, @RequestBody UpdateAdminModel model) {
+        Admin updatedAdmin = adminService.updateAdminProfile(id, model);
+
+        if (updatedAdmin != null) {
+            return ResponseEntity.ok(new ApiResponse(true, "Admin profile updated successfully", updatedAdmin));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, "Admin not found with this ID", null));
+        }
+    }
+
+    @PutMapping("/updatePassword/{id}")
+    @PermitAll
+    public ResponseEntity<ApiResponse> forgetPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String newPassword = body.get("newPassword");
+        Admin updatedAdmin = adminService.updatePasswordById(id, newPassword);
+
+        if (updatedAdmin != null) {
+            return ResponseEntity.ok(
+                new ApiResponse(true, "Password updated successfully", updatedAdmin)
+            );
+        } else {
+            return ResponseEntity.ok(
+                new ApiResponse(false, "Admin not found with this ID", null)
+            );
+        }
+    }
+   
+
+
 }
