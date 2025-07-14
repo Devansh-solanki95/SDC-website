@@ -72,10 +72,10 @@ public class PublicController {
         map.put("description", project.getDescription());
         map.put("link", project.getLink());
 
-        // ✅ Project image base64 (match frontend key)
+        // Project image base64 (match frontend key)
         if (project.getImage() != null && project.getImage().length > 0) {
             String base64Image = Base64.getEncoder().encodeToString(project.getImage());
-            map.put("imageBase64", base64Image); // ✅ Correct key
+            map.put("imageBase64", base64Image); //  Correct key
         } else {
             map.put("imageBase64", null);
         }

@@ -29,7 +29,7 @@ public class ApplicationFormController {
     @Autowired
     private EmailService emailService;
 
-    // ✅ Create + Resume Upload + Send Email
+    // Create + Resume Upload + Send Email
     @PostMapping(value = "/createWithResume", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse> createFormWithResume(
             @ModelAttribute ApplicationFormModel formModel,
@@ -63,13 +63,13 @@ public class ApplicationFormController {
             form.setEnrollmentNumber(formModel.getEnrollmentNumber());
             form.setPosition(formModel.getPosition());
             form.setPastExperience(formModel.getPastExperience());
-            form.setResumePath(uploadFile);  // ✅ only file name
+            form.setResumePath(uploadFile);  //  only file name
 
 
             // Step 3: Save to DB
             ApplicationForm savedForm = applicationFormService.saveForm(form);
 
-            // ✅ Step 4: Send email to admin with all form data
+            //Step 4: Send email to admin with all form data
             emailService.sendApplicationFormEmailWithAttachment(
                     savedForm.getName(),
                     savedForm.getEmail(),
@@ -79,7 +79,7 @@ public class ApplicationFormController {
                     savedForm.getEnrollmentNumber(),
                     savedForm.getPosition(),
                     savedForm.getPastExperience(),
-                    new File(resumePath) // ✅ Correct: File object passed
+                    new File(resumePath) // Correct: File object passed
             );
 
             // Step 5: Return response
@@ -108,7 +108,7 @@ public class ApplicationFormController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // ❌ Delete
+    //  Delete
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteForm(@PathVariable Long id) {
         applicationFormService.deleteForm(id);
