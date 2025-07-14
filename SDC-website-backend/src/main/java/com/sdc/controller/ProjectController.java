@@ -18,8 +18,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/auth/projects")
-@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping("/admin/projects")
+//@CrossOrigin(origins = "http://localhost:5173")
 
 public class ProjectController {	
 

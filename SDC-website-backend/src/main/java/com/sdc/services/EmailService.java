@@ -18,7 +18,7 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    // 📩 Contact Email
+    // Contact Email
     public void sendContactEmail(String name, String email, String phone, String query, String message) {
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo("devanshcloud2024@gmail.com");
@@ -33,7 +33,7 @@ public class EmailService {
         mailSender.send(mail);
     }
 
-    // 📩 Application Form Email (compact version like contact)
+    // 📩 Application Form Email 
     public void sendApplicationFormEmailWithAttachment(
             String name, String email, String phone, String year,
             String branch, String enrollNo, String position,
@@ -58,10 +58,12 @@ public class EmailService {
 
         helper.setText(body);
 
-        // ✅ Attach resume
+        // Attach resume
         FileSystemResource file = new FileSystemResource(resumePath);
 
-        helper.addAttachment("Resume_" + name + ".pdf", file);
+        String fileName = resumePath.getName();  // Gets original file name like abc.png, xyz.docx
+        helper.addAttachment(fileName, file);
+ 
 
         mailSender.send(message);
     }

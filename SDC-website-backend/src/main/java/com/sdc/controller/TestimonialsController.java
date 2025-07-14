@@ -17,7 +17,7 @@ import java.util.Base64;
 @RestController
 @RequestMapping("/admin/testimonials")
 @PreAuthorize("hasRole('ADMIN')") // Optional if secured
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class TestimonialsController {
 
     @Autowired

@@ -77,4 +77,12 @@ public class AdminService {
 
 	    return null;
 	}
+
+	public Admin findByUsername(String email) {
+	    return adminRepo.findByEmail(email).orElse(null);
+	}
+
+	public void save(Admin admin) {
+	    adminRepo.save(admin);
+	}
 }

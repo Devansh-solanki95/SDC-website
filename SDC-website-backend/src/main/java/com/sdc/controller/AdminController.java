@@ -1,7 +1,7 @@
 package com.sdc.controller;
 
 import com.sdc.entity.Admin;
-
+import com.sdc.entity.ApplicationForm;
 import com.sdc.entity.Contact;
 import com.sdc.entity.Images;
 import com.sdc.entity.Projects;
@@ -11,6 +11,7 @@ import com.sdc.models.AdminModel;
 import com.sdc.models.ForgetPasswordModel;
 import com.sdc.repo.ContactRepository;
 import com.sdc.services.AdminService;
+import com.sdc.services.ApplicationFormService;
 import com.sdc.services.ProjectService;
 import com.sdc.services.TeamMemberService;
 import com.sdc.utils.ApiResponse;
@@ -23,15 +24,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Paths;
+import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')") // applies to all methods
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class AdminController {
 
     @Autowired
@@ -45,6 +49,12 @@ public class AdminController {
     
     @Autowired
     private ContactRepository contactRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private ApplicationFormService applicationFormService;
 
     @PostMapping("/saveAdmin")
     public ResponseEntity<ApiResponse> saveAdmin(@RequestBody AdminModel model) {
@@ -133,35 +143,144 @@ public class AdminController {
     }
     
     
-    @PutMapping("/updateAdmin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse> updateAdminProfile(@PathVariable Long id, @RequestBody UpdateAdminModel model) {
-        Admin updatedAdmin = adminService.updateAdminProfile(id, model);
+    @PutMapping("/updateAdmin")
+    public ResponseEntity<ApiResponse> updateAdminProfile(
+            @RequestBody UpdateAdminModel model,
+            Principal principal
+    ) {
+        // Get logged-in admin's email from JWT via Principal
+        String email = principal.getName();
+
+        // Find the admin using email
+        Admin admin = adminService.findByUsername(email);
+        if (admin == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse(false, "Unauthorized or admin not found", null));
+        }
+
+        // Update profile fields
+        Admin updatedAdmin = adminService.updateAdminProfile(admin.getAdminId(), model);
 
         if (updatedAdmin != null) {
             return ResponseEntity.ok(new ApiResponse(true, "Admin profile updated successfully", updatedAdmin));
         } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(false, "Admin not found with this ID", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Failed to update profile", null));
         }
     }
 
-    @PutMapping("/updatePassword/{id}")
-    @PermitAll
-    public ResponseEntity<ApiResponse> forgetPassword(@PathVariable Long id, @RequestBody Map<String, String> body) {
+
+    @PutMapping("/change-password")
+    public ResponseEntity<ApiResponse> changePassword(
+            @RequestBody Map<String, String> body,
+            Principal principal
+    ) {
+        String oldPassword = body.get("oldPassword");
         String newPassword = body.get("newPassword");
-        Admin updatedAdmin = adminService.updatePasswordById(id, newPassword);
 
-        if (updatedAdmin != null) {
-            return ResponseEntity.ok(
-                new ApiResponse(true, "Password updated successfully", updatedAdmin)
-            );
-        } else {
-            return ResponseEntity.ok(
-                new ApiResponse(false, "Admin not found with this ID", null)
+        if (oldPassword == null || newPassword == null) {
+            return ResponseEntity.badRequest().body(
+                    new ApiResponse(false, "Old and new passwords are required", null)
             );
         }
+
+        String email = principal.getName(); // authenticated user's email from JWT
+        Admin admin = adminService.findByUsername(email);
+        if (admin == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new ApiResponse(false, "Admin not found", null)
+            );
+        }
+
+        String currentPassword = admin.getPassword();
+
+        boolean passwordMatches;
+
+        // Determine if stored password is encoded (typically starts with $2a$ or $2b$ for BCrypt)
+        if (currentPassword.startsWith("$2a$") || currentPassword.startsWith("$2b$")) {
+            // Encoded password
+            passwordMatches = passwordEncoder.matches(oldPassword, currentPassword);
+        } else {
+            // Plain text stored in DB (not recommended)
+            passwordMatches = oldPassword.equals(currentPassword);
+        }
+
+        if (!passwordMatches) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                    new ApiResponse(false, "Old password is incorrect", null)
+            );
+        }
+
+        // Always save new password in encoded form
+        admin.setPassword(passwordEncoder.encode(newPassword));
+        adminService.save(admin);
+
+        return ResponseEntity.ok(
+                new ApiResponse(true, "Password updated successfully", null)
+        );
     }
+    
+    
+    @GetMapping("/application-form/getAll")
+    public ResponseEntity<ApiResponse> getAllForms() {
+        List<ApplicationForm> list = applicationFormService.getAllForms();
+
+        if (list.isEmpty()) {
+            return ResponseEntity.ok(new ApiResponse(false, "No applications found", list));
+        }
+
+        // Convert each ApplicationForm to response map
+        List<Map<String, Object>> responseData = list.stream().map(form -> {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", form.getId());
+            map.put("name", form.getName());
+            map.put("contactNumber", form.getContactNumber());
+            map.put("email", form.getEmail());
+            map.put("year", form.getYear());
+            map.put("branch", form.getBranch());
+            map.put("enrollmentNumber", form.getEnrollmentNumber());
+            map.put("position", form.getPosition());
+            map.put("pastExperience", form.getPastExperience());
+
+            // ✅ Only file name, not full path
+            String resumePath = form.getResumePath();
+            String fileName = (resumePath != null) ? Paths.get(resumePath).getFileName().toString() : null;
+            map.put("resumePath", fileName);
+
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(new ApiResponse(true, "Applications fetched successfully", responseData));
+    }
+
+    @GetMapping("/application-form/get/{id}")
+    public ResponseEntity<ApiResponse> getFormById(@PathVariable Long id) {
+        return applicationFormService.getFormById(id)
+                .map(form -> ResponseEntity.ok(new ApiResponse(true, "Form found", form)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse(false, "Application form not found", null)));
+    }
+
+    // ❌ Delete
+    @DeleteMapping("/application-form/delete/{id}")
+    public ResponseEntity<ApiResponse> deleteForm(@PathVariable Long id) {
+        try {
+            Optional<ApplicationForm> optional = applicationFormService.getFormById(id);
+            if (optional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(new ApiResponse(false, "Application form not found", null));
+            }
+            applicationFormService.deleteForm(id);
+            return ResponseEntity.ok(new ApiResponse(true, "Application form deleted successfully", null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Something went wrong while deleting", null));
+        }
+    }
+    
+
+
    
 
 

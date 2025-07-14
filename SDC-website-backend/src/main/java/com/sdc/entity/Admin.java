@@ -18,6 +18,8 @@ public class Admin {
     private Long adminId;
 
     private String name;
+    
+    @Column(name="email", unique = true)
     private String email;
     private String contact_no;
     private String password;

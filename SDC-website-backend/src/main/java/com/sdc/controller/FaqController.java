@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/faq")
-@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping("/admin/faq")
+//@CrossOrigin(origins = "http://localhost:5173")
 @PreAuthorize("hasRole('ADMIN')") 
 public class FaqController {
 

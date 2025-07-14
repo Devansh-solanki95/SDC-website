@@ -29,7 +29,7 @@ import com.sdc.utils.ApiResponse;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
 	
 	   @Autowired
@@ -48,32 +48,37 @@ public class AuthController {
 	    private CustomUserDetailsService customUserDetailsService;
 
 	    @PostMapping("/login")
-	    
-	    
 	    public ResponseEntity<ApiResponse> login(@RequestBody LoginModel request) {
 	        UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getEmail());
 
+	        String rawPassword = request.getPass();
+	        String storedPassword = userDetails.getPassword(); // could be encoded or plain text
 
-	        
-	        if (!passwordEncoder.matches(request.getPass(), userDetails.getPassword())) {
+	        boolean passwordMatches;
+
+	        // Determine if stored password is encoded (e.g., BCrypt format)
+	        if (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$")) {
+	            passwordMatches = passwordEncoder.matches(rawPassword, storedPassword);
+	        } else {
+	            passwordMatches = rawPassword.equals(storedPassword);
+	        }
+
+	        if (!passwordMatches) {
 	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
 	                .body(new ApiResponse(false, "Invalid credentials", null));
 	        }
 
-	        // Set security context manually
+	        // ✅ Set authentication in SecurityContext
 	        UsernamePasswordAuthenticationToken authToken =
 	            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 	        SecurityContextHolder.getContext().setAuthentication(authToken);
 
-	        
 	        System.err.println("came  in controller");
 
+	        // ✅ Generate JWT token
 	        String token = jwtService.generateToken(userDetails);
-
-System.err.println("next step");
-	        // 🔽 Add this line to print token
 	        System.out.println("Generated token: " + token);
-	        
+
 	        Map<String, Object> responseData = new HashMap<>();
 	        responseData.put("token", token);
 
@@ -86,7 +91,7 @@ System.err.println("next step");
 
 	        return ResponseEntity.ok(new ApiResponse(true, "Login successful", responseData));
 	    }
-	    
+
 
 	    
 	  

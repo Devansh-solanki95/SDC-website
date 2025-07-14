@@ -30,7 +30,7 @@ import com.sdc.utils.ApiResponse;
 
 @RestController
 @RequestMapping("/public")
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class PublicController {
 	
 	@Autowired
