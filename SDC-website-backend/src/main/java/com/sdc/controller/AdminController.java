@@ -261,7 +261,7 @@ public class AdminController {
                         .body(new ApiResponse(false, "Application form not found", null)));
     }
 
-    // ❌ Delete
+    // Delete
     @DeleteMapping("/application-form/delete/{id}")
     public ResponseEntity<ApiResponse> deleteForm(@PathVariable Long id) {
         try {
