@@ -70,6 +70,7 @@ public class ApplicationFormController {
 
             // Step 3: Save to DB
             ApplicationForm savedForm = applicationFormService.saveForm(form);
+            System.err.println("application submitted");
 
             // ✅ Step 4: Send email to admin with all form data
             emailService.sendApplicationFormEmailWithAttachment(

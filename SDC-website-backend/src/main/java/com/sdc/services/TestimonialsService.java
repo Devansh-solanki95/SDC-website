@@ -2,7 +2,7 @@ package com.sdc.services;
 
 import com.sdc.entity.Testimonials;
 import com.sdc.models.TestimonialsModel;
-import com.sdc.repo.TestimonialsRepository;
+import com.sdc.repo.TestimonialRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,7 @@ import java.util.Optional;
 public class TestimonialsService {
 
     @Autowired
-    private TestimonialsRepository testimonialsRepository;
+    private TestimonialRepository testimonialsRepository;
 
     // ✅ Add new testimonial with image
     public Testimonials addTestimonial(TestimonialsModel model) {

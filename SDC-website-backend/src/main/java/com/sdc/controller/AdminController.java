@@ -7,6 +7,7 @@ import com.sdc.entity.Images;
 import com.sdc.entity.Projects;
 import com.sdc.entity.TeamMember;
 import com.sdc.models.TeamMemberModel;
+import com.sdc.models.AdminDTO;
 import com.sdc.models.AdminModel;
 import com.sdc.models.ForgetPasswordModel;
 import com.sdc.repo.ContactRepository;
@@ -280,8 +281,46 @@ public class AdminController {
     }
     
 
+	@GetMapping("/all-admins")    
+	public ResponseEntity<ApiResponse> getAllAdmins()
+	{
+	
+		try {
+            // Fetch all admins
+            List<Admin> admins = adminService.findAllAdmins();
 
+            // Convert to DTO to avoid exposing sensitive data like password
+            List<AdminDTO> adminDTOs = admins.stream()
+                .map(admin -> new AdminDTO(
+                    admin.getAdminId(),
+                    admin.getName(),
+                    admin.getEmail(),
+                    admin.getContact_no(),
+                    admin.getPassword()
+                ))
+                .collect(Collectors.toList());
+
+            // Create API response
+            ApiResponse response = new ApiResponse(
+                true,
+                "Admins retrieved successfully",
+                adminDTOs
+            );
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            ApiResponse errorResponse = new ApiResponse(
+                false,
+                "Error retrieving admins: " + e.getMessage(),
+                null
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+		
+	}
    
 
 
-}
+

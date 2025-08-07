@@ -43,7 +43,7 @@ public class EmailService {
 
         MimeMessageHelper helper = new MimeMessageHelper(message, true); // true = multipart
 
-        helper.setTo("ayushichoudhary2786@gmail.com");
+        helper.setTo("devanshcloud2024@gmail.com");
         helper.setSubject("New Application from " + name);
 
         String body = "📄 New application form details:\n\n" +
