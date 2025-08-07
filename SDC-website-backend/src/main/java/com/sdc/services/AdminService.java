@@ -1,5 +1,6 @@
 package com.sdc.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,5 +85,10 @@ public class AdminService {
 
 	public void save(Admin admin) {
 	    adminRepo.save(admin);
+	}
+
+	public List<Admin> findAllAdmins() {
+		// TODO Auto-generated method stub
+		return adminRepo.findAll();
 	}
 }

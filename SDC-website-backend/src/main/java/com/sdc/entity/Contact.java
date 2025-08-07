@@ -28,7 +28,7 @@ public class Contact {
 		 @Column
 		private String query;
 		 
-		 @Column
+		 @Column(columnDefinition = "MEDIUMTEXT")
 		private String message;
 
 	public Contact(String name, String email, String contactNo, String query, String message) {
