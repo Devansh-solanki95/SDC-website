@@ -18,19 +18,17 @@
 #
 # ENTRYPOINT ["java", "-jar", "app.jar"]
 
-
-# Stage 1: build the jar using Maven
-FROM maven:3.9.0-eclipse-temurin-17 AS build
+# Stage 1: build the jar using Maven (Upgraded to temurin-21)
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Change these two lines to point explicitly to the folder:
+# copy pom and source, then build
 COPY SDC-website-backend/pom.xml ./
 COPY SDC-website-backend/src ./src
-
 RUN mvn clean package -DskipTests
 
-# Stage 2: run the jar
-FROM eclipse-temurin:17-jre
+# Stage 2: run the jar (Upgraded to temurin-21)
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # copy the built jar
