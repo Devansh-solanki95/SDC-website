@@ -58,6 +58,8 @@ public class AdminController {
     private ApplicationFormService applicationFormService;
 
     @PostMapping("/saveAdmin")
+    //used for allowing all members to access the saveAdmin endpoint
+//    @PermitAll
     public ResponseEntity<ApiResponse> saveAdmin(@RequestBody AdminModel model) {
         Boolean status = adminService.saveAdmin(model);
         return ResponseEntity.ok(new ApiResponse(status, status ? "Admin saved successfully" : "Admin not saved", model));
