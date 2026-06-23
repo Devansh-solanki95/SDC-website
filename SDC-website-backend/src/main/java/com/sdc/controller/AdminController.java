@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')") // applies to all methods
 //@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://sdc-frontend-seven.vercel.app/")
 public class AdminController {
 
     @Autowired
@@ -59,7 +60,7 @@ public class AdminController {
 
     @PostMapping("/saveAdmin")
     //used for allowing all members to access the saveAdmin endpoint
-//    @PermitAll
+    @PermitAll
     public ResponseEntity<ApiResponse> saveAdmin(@RequestBody AdminModel model) {
         Boolean status = adminService.saveAdmin(model);
         return ResponseEntity.ok(new ApiResponse(status, status ? "Admin saved successfully" : "Admin not saved", model));

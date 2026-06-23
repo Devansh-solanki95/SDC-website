@@ -13,21 +13,23 @@ public class WebCorsConfig implements WebMvcConfigurer {
 
         // 🔓 Public: /auth/**
         registry.addMapping("/auth/**")
-                .allowedOrigins("http://localhost:5173")
+//                .allowedOrigins("http://localhost:5173")
+                .allowedOrigins("https://sdc-frontend-seven.vercel.app/")
+
                 .allowedMethods("GET", "POST", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
 
         // 🔓 Public: /public/**
         registry.addMapping("/public/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOrigins("https://sdc-frontend-seven.vercel.app/")
                 .allowedMethods("GET", "POST", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(false);
 
         // 🔐 Admin: /admin/**
         registry.addMapping("/admin/**")
-                .allowedOrigins("http://localhost:5173") // replace with actual admin frontend domain in production
+                .allowedOrigins("https://sdc-frontend-seven.vercel.app/") // replace with actual admin frontend domain in production
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true); // for JWT auth header or session cookies
