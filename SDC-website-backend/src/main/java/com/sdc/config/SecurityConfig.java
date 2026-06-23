@@ -98,7 +98,8 @@ public class SecurityConfig {
 
                 // 3. Configure HTTP Route Permissions
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/").permitAll()            // Allow checking the root Render URL safely
+                        .requestMatchers("/").permitAll()// Allow checking the root Render URL safely
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers("/admin/saveAdmin").permitAll()

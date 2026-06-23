@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')") // applies to all methods
+//@PreAuthorize("hasRole('ADMIN')") // applies to all methods
 //@CrossOrigin(origins = "http://localhost:5173")
 @CrossOrigin(origins = "https://sdc-frontend-seven.vercel.app/")
 public class AdminController {
